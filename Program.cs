@@ -12,7 +12,7 @@ namespace StudentManagementSystem
 
             while (true)
             {
-                Console.WriteLine("\n--- Student Management System ---");
+                Console.WriteLine("\n--- Student Information System ---");
                 Console.WriteLine("1. Add a Student");
                 Console.WriteLine("2. Search a Student");
                 Console.WriteLine("3. Update Student Status");
@@ -29,10 +29,17 @@ namespace StudentManagementSystem
                         string newName = Console.ReadLine();
 
                         names.Add(newName);
-                        status.Add("Not yet Enrolled");
+                        status.Add("Not yet Enrolled!\n");
 
-                        Console.WriteLine("Successfully Saved!");
+                        Console.WriteLine("Successfully Saved!!\n");
                         break;
+
+                        if (newName == "")
+                        {
+                            Console.WriteLine("Name cannot be empty.\n");
+                            break;
+                        }
+
 
                     case 2:
                         Console.Write("Search Student: ");
@@ -47,7 +54,8 @@ namespace StudentManagementSystem
                         }
                         else
                         {
-                            Console.WriteLine("Student " + search + " does not exist.");
+                            Console.WriteLine("Student " + search + " does not exist.\n");
+
                         }
                         break;
 
@@ -59,11 +67,11 @@ namespace StudentManagementSystem
 
                         if (i == -1)
                         {
-                            Console.WriteLine("Student Name does not exist.");
+                            Console.WriteLine("Student Name does not exist.\n");
                             break;
                         }
 
-                        Console.WriteLine("\nChoose new status:");
+                        Console.WriteLine("\nChoose a new status for student:");
                         Console.WriteLine("1. Enroll");
                         Console.WriteLine("2. UnEnroll");
                         Console.WriteLine("3. Apply");
@@ -91,7 +99,7 @@ namespace StudentManagementSystem
                             newStatus = "Deactivated";
                         else
                         {
-                            Console.WriteLine("Invalid choice.");
+                            Console.WriteLine("Invalid choice.\n");
                             break;
                         }
 
@@ -117,7 +125,7 @@ namespace StudentManagementSystem
                         return;
 
                     default:
-                        Console.WriteLine("\nInvalid option.");
+                        Console.WriteLine("\nInvalid option.\n");
                         break;
                 }
             }
