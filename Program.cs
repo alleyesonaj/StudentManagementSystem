@@ -59,7 +59,7 @@ namespace StudentManagementSystem
 
                         if (i == -1)
                         {
-                            Console.WriteLine("Student does not exist.");
+                            Console.WriteLine("Student Name does not exist.");
                             break;
                         }
 
