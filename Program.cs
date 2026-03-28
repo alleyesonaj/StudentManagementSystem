@@ -11,12 +11,13 @@ namespace StudentManagementSystem
 
             while (true)
             {
-                Console.WriteLine("\n--- Student Information System ---");
+                Console.WriteLine("\n--- Student Management System ---");
                 Console.WriteLine("1. Add a Student");
                 Console.WriteLine("2. Search a Student");
                 Console.WriteLine("3. Update Student Status");
                 Console.WriteLine("4. View Lists of Students");
-                Console.WriteLine("5. Exit");
+                Console.WriteLine("5. Remove a Student");
+                Console.WriteLine("6. Exit");
                 Console.Write("Choose: ");
 
                 int option = Convert.ToInt32(Console.ReadLine());
@@ -40,9 +41,12 @@ namespace StudentManagementSystem
                         break;
 
                     case 5:
+                        appService.RemoveStudent();
+                        break;
+                    case 6:
                         return;
 
-                    default:
+                default:
                         Console.WriteLine("\nInvalid option.\n");
                         break;
                 }

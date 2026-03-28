@@ -2,8 +2,10 @@
 {
     public class Student
     {
+        
+        public int StudentID { get; set; }
         public string Name { get; set; }
-        public string Status { get; set; }
+        public string Status { get; set; } = "Not yet Enrolled!";
 
         public Student()
         {

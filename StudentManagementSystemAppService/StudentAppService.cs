@@ -9,10 +9,11 @@ namespace StudentManagementSystemAppService
     {
         private StudentDataService dataService = new StudentDataService();
 
+        
         public void AddStudent()
         {
             Console.Write("Enter Student Name: ");
-            string newName = Console.ReadLine();
+            string newName = Console.ReadLine() ?? "";
 
             if (string.IsNullOrWhiteSpace(newName))
             {
@@ -24,54 +25,47 @@ namespace StudentManagementSystemAppService
             student.Name = newName;
             student.Status = "Not yet Enrolled!";
 
+            
             dataService.AddStudent(student);
-            Console.WriteLine("Successfully Saved!!\n");
+            Console.WriteLine("Successfully Saved to Database!!\n");
         }
 
+        
         public void SearchStudent()
         {
-            Console.Write("Search Student: ");
-            string search = Console.ReadLine();
+            Console.Write("Search Student Name: ");
+            string search = Console.ReadLine() ?? "";
 
-            List<Student> students = dataService.GetStudents();
+            
+            Student foundStudent = dataService.SearchStudentInDb(search);
 
-            foreach (Student student in students)
+            if (foundStudent != null)
             {
-                if (student.Name == search)
-                {
-                    Console.WriteLine("Name: " + student.Name);
-                    Console.WriteLine("Status: " + student.Status);
-                    return;
-                }
+                Console.WriteLine("\n--- Student Found ---");
+                Console.WriteLine($"ID: {foundStudent.StudentID}");
+                Console.WriteLine($"Name: {foundStudent.Name}");
+                Console.WriteLine($"Status: {foundStudent.Status}\n");
             }
-
-            Console.WriteLine("Student " + search + " does not exist.\n");
+            else
+            {
+                Console.WriteLine($"Student '{search}' does not exist.\n");
+            }
         }
 
+        
         public void UpdateStudentStatus()
         {
-            Console.Write("Enter Student Name to update: ");
-            string target = Console.ReadLine();
+            
+            ViewStudents();
 
-            List<Student> students = dataService.GetStudents();
-            Student foundStudent = null;
-
-            foreach (Student student in students)
+            Console.Write("\nEnter Student ID to update: ");
+            if (!int.TryParse(Console.ReadLine(), out int targetId))
             {
-                if (student.Name == target)
-                {
-                    foundStudent = student;
-                    break;
-                }
-            }
-
-            if (foundStudent == null)
-            {
-                Console.WriteLine("Student Name does not exist.\n");
+                Console.WriteLine("Invalid ID. Please enter a numeric ID.\n");
                 return;
             }
 
-            Console.WriteLine("\nChoose a new status for student:");
+            Console.WriteLine("\nChoose a new status:");
             Console.WriteLine("1. Enroll");
             Console.WriteLine("2. UnEnroll");
             Console.WriteLine("3. Apply");
@@ -79,40 +73,73 @@ namespace StudentManagementSystemAppService
             Console.WriteLine("5. Transferee");
             Console.WriteLine("6. Waitlist");
             Console.WriteLine("7. Deactivate");
-            Console.Write("Choice: ");
+            Console.Write("Choice (1-7): ");
 
-            int choice = Convert.ToInt32(Console.ReadLine());
-
-            if (choice == 1) foundStudent.Status = "Enrolled";
-            else if (choice == 2) foundStudent.Status = "UnEnrolled";
-            else if (choice == 3) foundStudent.Status = "Applied";
-            else if (choice == 4) foundStudent.Status = "Dropped";
-            else if (choice == 5) foundStudent.Status = "Transferee";
-            else if (choice == 6) foundStudent.Status = "Waitlisted";
-            else if (choice == 7) foundStudent.Status = "Deactivated";
-            else
+            string choice = Console.ReadLine() ?? "";
+            string newStatus = choice switch
             {
-                Console.WriteLine("Invalid choice.\n");
+                "1" => "Enrolled",
+                "2" => "UnEnrolled",
+                "3" => "Applied",
+                "4" => "Dropped",
+                "5" => "Transferee",
+                "6" => "Waitlisted",
+                "7" => "Deactivated",
+                _ => ""
+            };
+
+            if (string.IsNullOrEmpty(newStatus))
+            {
+                Console.WriteLine("Invalid choice. Update cancelled.\n");
                 return;
             }
 
-            Console.WriteLine("Status updated successfully!");
+            
+            dataService.UpdateStatusById(targetId, newStatus);
+            Console.WriteLine($"Successfully updated Student ID {targetId} to '{newStatus}'.\n");
         }
 
+        
         public void ViewStudents()
         {
             List<Student> students = dataService.GetStudents();
 
             if (students.Count == 0)
             {
-                Console.WriteLine("No students yet.");
+                Console.WriteLine("No students found in the database.");
                 return;
             }
 
-            Console.WriteLine("\n--- Student List ---");
-            for (int i = 0; i < students.Count; i++)
+            Console.WriteLine("\n--- Student List (from MS SQL) ---");
+            foreach (var s in students)
             {
-                Console.WriteLine((i + 1) + ". " + students[i].Name + " - " + students[i].Status);
+                
+                Console.WriteLine($"ID: {s.StudentID} | Name: {s.Name} | Status: {s.Status}");
+            }
+        }
+        public void RemoveStudent()
+        {
+            ViewStudents(); 
+
+            Console.Write("\nEnter Student ID to remove: ");
+            if (!int.TryParse(Console.ReadLine(), out int id))
+            {
+                Console.WriteLine("Invalid ID.\n");
+                return;
+            }
+
+            
+            Console.Write("Are you sure you want to remove this student from this history log? (Y/N): ");
+            string confirmation = Console.ReadLine()?.ToUpper() ?? "";
+
+            if (confirmation == "Y")
+            {
+                dataService.DeleteStudentById(id);
+                Console.WriteLine("Student removed successfully.\n");
+            }
+            else
+            {
+                Console.WriteLine("Removal cancelled.\n");
             }
         }
     }
