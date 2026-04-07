@@ -25,7 +25,7 @@ namespace StudentManagementSystemDataService
                         {
                             StudentID = (int)reader["StudentID"],
                             Name = reader["Name"].ToString() ?? "",
-                            Status = reader["Status"].ToString() ?? ""
+                            Status = reader["Status"].ToString()?.Trim() ?? ""
                         });
                     }
                 }
@@ -65,7 +65,7 @@ namespace StudentManagementSystemDataService
                         {
                             StudentID = (int)reader["StudentID"],
                             Name = reader["Name"].ToString() ?? "",
-                            Status = reader["Status"].ToString() ?? ""
+                            Status = reader["Status"].ToString()?.Trim() ?? ""
                         };
                     }
                 }

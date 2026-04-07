@@ -52,54 +52,74 @@ namespace StudentManagementSystemAppService
             }
         }
 
-        
+
         public void UpdateStudentStatus()
         {
             
+            List<Student> students = dataService.GetStudents();
             ViewStudents();
 
             Console.Write("\nEnter Student ID to update: ");
-            if (!int.TryParse(Console.ReadLine(), out int targetId))
+            if (!int.TryParse(Console.ReadLine(), out int targetId)) return;
+
+            Student selected = students.Find(s => s.StudentID == targetId);
+            if (selected == null)
             {
-                Console.WriteLine("Invalid ID. Please enter a numeric ID.\n");
+                Console.WriteLine("Student not found.");
                 return;
             }
 
-            Console.WriteLine("\nChoose a new status:");
-            Console.WriteLine("1. Enroll");
-            Console.WriteLine("2. UnEnroll");
-            Console.WriteLine("3. Apply");
-            Console.WriteLine("4. Drop");
-            Console.WriteLine("5. Transferee");
-            Console.WriteLine("6. Waitlist");
-            Console.WriteLine("7. Deactivate");
-            Console.Write("Choice (1-7): ");
+            
+            if (selected.Status == "Deactivated")
+            {
+                Console.WriteLine("\n[ACCESS DENIED] This student is Deactivated and cannot be updated.\n");
+                return;
+            }
 
+            
+            Console.WriteLine($"\nUpdating: {selected.Name} (Current: {selected.Status})");
+            Console.WriteLine("1. Enroll | 2. Graduate | 3. Apply | 4. Drop | 5. Transfer | 6. Waitlist | 7. Deactivate");
+            Console.Write("Choice (1-7): ");
             string choice = Console.ReadLine() ?? "";
+
+            
             string newStatus = choice switch
             {
                 "1" => "Enrolled",
-                "2" => "UnEnrolled",
+                "2" => "Graduated",
                 "3" => "Applied",
                 "4" => "Dropped",
-                "5" => "Transferee",
+                "5" => "Transferred",
                 "6" => "Waitlisted",
                 "7" => "Deactivated",
                 _ => ""
             };
 
-            if (string.IsNullOrEmpty(newStatus))
+            if (newStatus == "") return;
+
+            
+            if (newStatus == "Enrolled" && selected.Status != "Applied")
             {
-                Console.WriteLine("Invalid choice. Update cancelled.\n");
+                Console.WriteLine("REJECTED: Student must be 'Applied' first.");
+                return;
+            }
+
+            if (newStatus == "Graduated" && selected.Status != "Enrolled")
+            {
+                Console.WriteLine("REJECTED: Student must be 'Enrolled' first.");
+                return;
+            }
+
+            if (newStatus == "Dropped" && selected.Status == "Graduated")
+            {
+                Console.WriteLine("REJECTED: Cannot drop a graduated student.");
                 return;
             }
 
             
             dataService.UpdateStatusById(targetId, newStatus);
-            Console.WriteLine($"Successfully updated Student ID {targetId} to '{newStatus}'.\n");
+            Console.WriteLine("Status updated successfully!");
         }
-
-        
         public void ViewStudents()
         {
             List<Student> students = dataService.GetStudents();
