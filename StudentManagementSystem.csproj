@@ -8,6 +8,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.Data.SqlClient" Version="7.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\StudentManagementSystemAppService\StudentManagementSystemAppService.csproj" />
     <ProjectReference Include="..\StudentManagementSystemDataService\StudentManagementSystemDataService.csproj" />
     <ProjectReference Include="..\StudentManagementSystemModels\StudentManagementSystemModels.csproj" />

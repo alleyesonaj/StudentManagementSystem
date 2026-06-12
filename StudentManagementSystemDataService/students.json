@@ -1,0 +1,27 @@
+[
+  {
+    "StudentID": 3,
+    "Name": "AJ",
+    "Status": "Graduated"
+  },
+  {
+    "StudentID": 2,
+    "Name": "Eunice",
+    "Status": "Transferee"
+  },
+  {
+    "StudentID": 4,
+    "Name": "Francis",
+    "Status": "Enrolled"
+  },
+  {
+    "StudentID": 5,
+    "Name": "Gian",
+    "Status": "Applied"
+  },
+  {
+    "StudentID": 7,
+    "Name": "Neil",
+    "Status": "Waitlisted"
+  }
+]
