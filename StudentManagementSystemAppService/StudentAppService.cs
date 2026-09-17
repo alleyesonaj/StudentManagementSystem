@@ -2,15 +2,23 @@
 using System.Collections.Generic;
 using StudentManagementSystemModels;
 using StudentManagementSystemDataService;
-
+using StudentManagementSystemEmailService;
 
 namespace StudentManagementSystemAppService
 {
     public class StudentAppService
     {
-        private StudentDataService dataService = new StudentDataService();
+        private readonly StudentDataService dataService;
+        private readonly EmailService emailService;
+        private readonly string notifyEmail;
 
-        
+        public StudentAppService(string connectionString, EmailService emailService, string notifyEmail)
+        {
+            this.dataService = new StudentDataService(connectionString);
+            this.emailService = emailService;
+            this.notifyEmail = notifyEmail ?? "";
+        }
+
         public void AddStudent()
         {
             Console.Write("Enter Student Name: ");
@@ -23,21 +31,20 @@ namespace StudentManagementSystemAppService
             }
 
             Student student = new Student();
-            student.Name = newName;
+            student.Name = newName.Trim();
             student.Status = "Not yet Enrolled!";
 
-            
             dataService.AddStudent(student);
             Console.WriteLine("Successfully Saved to Database!!\n");
+
+            emailService.SendStudentAddedEmail(student, notifyEmail);
         }
 
-        
         public void SearchStudent()
         {
             Console.Write("Search Student Name: ");
             string search = Console.ReadLine() ?? "";
 
-            
             Student foundStudent = dataService.SearchStudentInDb(search);
 
             if (foundStudent != null)
@@ -53,15 +60,19 @@ namespace StudentManagementSystemAppService
             }
         }
 
-
         public void UpdateStudentStatus()
         {
-            
             List<Student> students = dataService.GetStudents();
             ViewStudents();
 
+            if (students.Count == 0) return;
+
             Console.Write("\nEnter Student ID to update: ");
-            if (!int.TryParse(Console.ReadLine(), out int targetId)) return;
+            if (!int.TryParse(Console.ReadLine(), out int targetId))
+            {
+                Console.WriteLine("Invalid ID.\n");
+                return;
+            }
 
             Student selected = students.Find(s => s.StudentID == targetId);
             if (selected == null)
@@ -70,20 +81,17 @@ namespace StudentManagementSystemAppService
                 return;
             }
 
-            
             if (selected.Status == "Deactivated")
             {
                 Console.WriteLine("\n[ACCESS DENIED] This student is Deactivated and cannot be updated.\n");
                 return;
             }
 
-            
             Console.WriteLine($"\nUpdating: {selected.Name} (Current: {selected.Status})");
             Console.WriteLine("1. Enroll | 2. Graduate | 3. Apply | 4. Drop | 5. Transfer | 6. Waitlist | 7. Deactivate");
             Console.Write("Choice (1-7): ");
             string choice = Console.ReadLine() ?? "";
 
-            
             string newStatus = choice switch
             {
                 "1" => "Enrolled",
@@ -96,9 +104,12 @@ namespace StudentManagementSystemAppService
                 _ => ""
             };
 
-            if (newStatus == "") return;
+            if (newStatus == "")
+            {
+                Console.WriteLine("Invalid choice.\n");
+                return;
+            }
 
-            
             if (newStatus == "Enrolled" && selected.Status != "Applied")
             {
                 Console.WriteLine("REJECTED: Student must be 'Applied' first.");
@@ -117,10 +128,16 @@ namespace StudentManagementSystemAppService
                 return;
             }
 
-            
+            // Keep the old value for the notification before overwriting it
+            string oldStatus = selected.Status;
+
             dataService.UpdateStatusById(targetId, newStatus);
+            selected.Status = newStatus;
             Console.WriteLine("Status updated successfully!");
+
+            emailService.SendStatusUpdateEmail(selected, oldStatus, notifyEmail);
         }
+
         public void ViewStudents()
         {
             List<Student> students = dataService.GetStudents();
@@ -134,13 +151,13 @@ namespace StudentManagementSystemAppService
             Console.WriteLine("\n--- Student List (from MS SQL) ---");
             foreach (var s in students)
             {
-                
                 Console.WriteLine($"ID: {s.StudentID} | Name: {s.Name} | Status: {s.Status}");
             }
         }
+
         public void RemoveStudent()
         {
-            ViewStudents(); 
+            ViewStudents();
 
             Console.Write("\nEnter Student ID to remove: ");
             if (!int.TryParse(Console.ReadLine(), out int id))
@@ -149,14 +166,23 @@ namespace StudentManagementSystemAppService
                 return;
             }
 
-            
+            // Fetch before deleting so the notification can name the student
+            Student toRemove = dataService.GetStudentById(id);
+            if (toRemove == null)
+            {
+                Console.WriteLine("Student not found.\n");
+                return;
+            }
+
             Console.Write("Are you sure you want to remove this student from this history log? (Y/N): ");
-            string confirmation = Console.ReadLine()?.ToUpper() ?? "";
+            string confirmation = Console.ReadLine()?.Trim().ToUpper() ?? "";
 
             if (confirmation == "Y")
             {
                 dataService.DeleteStudentById(id);
                 Console.WriteLine("Student removed successfully.\n");
+
+                emailService.SendStudentRemovedEmail(id, toRemove.Name, notifyEmail);
             }
             else
             {

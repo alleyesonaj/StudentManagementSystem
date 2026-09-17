@@ -1,5 +1,8 @@
 ﻿using System;
+using System.IO;
+using Microsoft.Extensions.Configuration;
 using StudentManagementSystemAppService;
+using StudentManagementSystemEmailService;
 
 namespace StudentManagementSystem
 {
@@ -7,8 +10,23 @@ namespace StudentManagementSystem
     {
         static void Main(string[] args)
         {
-            StudentAppService appService = new StudentAppService();
+            // --- Load appsettings.json ---
+            IConfiguration configuration = new ConfigurationBuilder()
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+                .Build();
 
+            string connectionString =
+                configuration.GetConnectionString("DefaultConnection") ?? "";
+            string notifyEmail =
+                configuration["EmailSettings:NotifyEmail"] ?? "";
+
+            // --- Wire up dependencies ---
+            EmailService emailService = new EmailService(configuration);
+            StudentAppService appService =
+                new StudentAppService(connectionString, emailService, notifyEmail);
+
+            // --- Menu loop ---
             while (true)
             {
                 Console.WriteLine("\n--- Student Management System ---");
@@ -20,7 +38,12 @@ namespace StudentManagementSystem
                 Console.WriteLine("6. Exit");
                 Console.Write("Choose: ");
 
-                int option = Convert.ToInt32(Console.ReadLine());
+                // TryParse instead of Convert.ToInt32 so letters don't crash the app
+                if (!int.TryParse(Console.ReadLine(), out int option))
+                {
+                    Console.WriteLine("\nInvalid option.\n");
+                    continue;
+                }
 
                 switch (option)
                 {
@@ -43,10 +66,11 @@ namespace StudentManagementSystem
                     case 5:
                         appService.RemoveStudent();
                         break;
+
                     case 6:
                         return;
 
-                default:
+                    default:
                         Console.WriteLine("\nInvalid option.\n");
                         break;
                 }

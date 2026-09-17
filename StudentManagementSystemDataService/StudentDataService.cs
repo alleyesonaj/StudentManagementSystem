@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Microsoft.Data.SqlClient;
 using StudentManagementSystemModels;
 
@@ -6,15 +7,23 @@ namespace StudentManagementSystemDataService
 {
     public class StudentDataService
     {
-        
-        private string connectionString = "Server=localhost\\SQLEXPRESS;Database=StudentManagementSystemDatabase;Trusted_Connection=True;TrustServerCertificate=True;";
+        private readonly string connectionString;
+
+        public StudentDataService(string connectionString)
+        {
+            if (string.IsNullOrWhiteSpace(connectionString))
+                throw new ArgumentException("Connection string is missing. Check appsettings.json.");
+
+            this.connectionString = connectionString;
+        }
 
         public List<Student> GetStudents()
         {
             List<Student> students = new List<Student>();
+
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
-                string query = "SELECT StudentID, Name, Status FROM Students";
+                string query = "SELECT StudentID, Name, Status FROM Students ORDER BY StudentID";
                 SqlCommand cmd = new SqlCommand(query, conn);
                 conn.Open();
                 using (SqlDataReader reader = cmd.ExecuteReader())
@@ -30,7 +39,37 @@ namespace StudentManagementSystemDataService
                     }
                 }
             }
+
             return students;
+        }
+
+        /// <summary>
+        /// Fetches one student by primary key. Returns null when not found.
+        /// </summary>
+        public Student GetStudentById(int id)
+        {
+            using (SqlConnection conn = new SqlConnection(connectionString))
+            {
+                string query = "SELECT StudentID, Name, Status FROM Students WHERE StudentID = @id";
+                SqlCommand cmd = new SqlCommand(query, conn);
+                cmd.Parameters.AddWithValue("@id", id);
+
+                conn.Open();
+                using (SqlDataReader reader = cmd.ExecuteReader())
+                {
+                    if (reader.Read())
+                    {
+                        return new Student
+                        {
+                            StudentID = (int)reader["StudentID"],
+                            Name = reader["Name"].ToString() ?? "",
+                            Status = reader["Status"].ToString()?.Trim() ?? ""
+                        };
+                    }
+                }
+            }
+
+            return null;
         }
 
         public void AddStudent(Student student)
@@ -47,14 +86,13 @@ namespace StudentManagementSystemDataService
             }
         }
 
-        
         public Student SearchStudentInDb(string name)
         {
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
-                string query = "SELECT StudentID, Name, Status FROM Students WHERE Name = @name";
+                string query = "SELECT StudentID, Name, Status FROM Students WHERE UPPER(Name) = UPPER(@name)";
                 SqlCommand cmd = new SqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("@name", name);
+                cmd.Parameters.AddWithValue("@name", (name ?? "").Trim());
 
                 conn.Open();
                 using (SqlDataReader reader = cmd.ExecuteReader())
@@ -70,10 +108,10 @@ namespace StudentManagementSystemDataService
                     }
                 }
             }
+
             return null;
         }
 
-        
         public void UpdateStatusById(int id, string newStatus)
         {
             using (SqlConnection conn = new SqlConnection(connectionString))
@@ -87,6 +125,7 @@ namespace StudentManagementSystemDataService
                 cmd.ExecuteNonQuery();
             }
         }
+
         public void DeleteStudentById(int id)
         {
             using (SqlConnection conn = new SqlConnection(connectionString))
